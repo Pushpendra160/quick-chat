@@ -13,7 +13,7 @@ export const Signup = async (req,res)=>{
             message:"Please fill all the fields"
         })
     }
-    const user = await User.findOne(email);
+    const user = await User.findOne({email});
     if(user){
         return res.json({
             success:false,
@@ -36,7 +36,7 @@ export const Signup = async (req,res)=>{
         token
     })
  } catch (error) {
-    console.log(error.message);
+    console.error(error.message);
     res.json({
         success:false,
         message:error.message
@@ -79,7 +79,7 @@ export const checkAuth = (req,res)=>{
     res.json({
         success:true,
         message:"User is authenticated",
-        userData:req.user
+        user:req.user
     });
 }
 
@@ -107,7 +107,7 @@ try {
         user:updatedUser
     })
 } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
          res.json({
         success:false,
         message:error.message
