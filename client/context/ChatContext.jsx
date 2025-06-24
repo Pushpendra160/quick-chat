@@ -41,9 +41,8 @@ export const ChatProvider = ({children}) => {
     const sendMessage = async (messageData) => {
         try {
             const {data} = await axios.post(`/api/messages/send/${selectedUser._id}`,messageData);
-            console.log(data);
             if(data.success){
-                setMessages([...messages,data.message]);
+                setMessages((prev)=>[...prev,data.message]);
                 // socket.emit('send-message',data.newMessage);
             }
         } catch (error) {
@@ -57,7 +56,7 @@ const subscribeToMessages = () => {
     socket.on('newMessage',(newMessage)=>{
         if(selectedUser && newMessage.senderId===selectedUser._id){
            newMessage.seen=true;
-           setMessages([...messages,newMessage]);
+           setMessages((prev)=>[...prev,newMessage]);
            axios.put(`/api/messages/mark/${newMessage._id}`)
         }
         else{
@@ -79,11 +78,29 @@ const subscribeToMessages = () => {
 const unsubscribeFromMessages = () => {
     if(socket) socket.off('newMessage');
 }
-useEffect(()=>{
-subscribeToMessages();
-return ()=>{
+// useEffect(()=>{
+//     getMessages(selectedUser?._id);
+// },[messages])
+useEffect(() => {
+ 
+
+  if (!socket || !selectedUser) return;
+
+  const handleConnection = () => {
+    subscribeToMessages();
+  };
+
+  if (socket.connected) {
+    handleConnection();
+  } else {
+    socket.once("connect", handleConnection);
+  }
+
+  return () => {
     unsubscribeFromMessages();
-}},[socket,selectedUser])
+    socket?.off("connect", handleConnection);
+  };
+}, [socket, selectedUser]);
     const value={
         users,
         selectedUser,
